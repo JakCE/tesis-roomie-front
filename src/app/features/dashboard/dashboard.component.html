@@ -1,0 +1,155 @@
+<div class="h-full flex items-center justify-center p-8">
+
+  <!-- Loading initial -->
+  @if (isLoading() && profiles().length === 0) {
+    <div class="text-center">
+      <div class="w-12 h-12 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin mx-auto mb-4"></div>
+      <p class="text-sm text-gray-400">Cargando recomendaciones...</p>
+    </div>
+
+  } @else if (hasProfiles()) {
+    <div class="w-full max-w-sm">
+
+      <!-- Compatibility badge -->
+      <div class="flex justify-between items-center mb-4">
+        <p class="text-sm text-gray-400">Recomendado para ti</p>
+        <span class="px-3 py-1 bg-violet-100 text-violet-700 text-xs font-semibold rounded-full">
+          {{ getCompatibility(currentProfile().hybrid_score) }}% compatible
+        </span>
+      </div>
+
+      <!-- Card -->
+      <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+
+        <!-- Avatar section -->
+        <div class="h-52 flex items-center justify-center relative"
+          [class]="getAvatarColor(currentProfile().profile.$id)">
+          <span class="text-white text-6xl font-bold opacity-90">
+            {{ getInitials(currentProfile().profile.display_name) }}
+          </span>
+          <!-- Gender + age badge -->
+          <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
+            <span class="text-xs font-medium text-gray-700">
+              {{ genderLabel[currentProfile().profile.gender] }} · {{ getAge(currentProfile().profile.birth_date) }} años
+            </span>
+          </div>
+          <!-- Score detail badge -->
+          <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full">
+            <span class="text-xs text-gray-500">
+              📊 {{ getCompatibility(currentProfile().content_score) }}% · 🤝 {{ getCompatibility(currentProfile().collab_score) }}%
+            </span>
+          </div>
+        </div>
+
+        <!-- Info section -->
+        <div class="p-5">
+
+          <!-- Name + occupation -->
+          <div class="mb-3">
+            <h2 class="text-xl font-bold text-gray-900">
+              {{ currentProfile().profile.display_name ?? 'Sin nombre' }}
+            </h2>
+            <p class="text-sm text-gray-400">
+              {{ occupationLabel[currentProfile().profile.occupation] }} · {{ currentProfile().profile.preferred_zone }}
+            </p>
+          </div>
+
+          <!-- Budget + schedule -->
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xs bg-green-50 text-green-700 px-2.5 py-1 rounded-full font-medium">
+              S/. {{ currentProfile().profile.budget_min }} – {{ currentProfile().profile.budget_max }}/mes
+            </span>
+            <span class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-medium">
+              {{ scheduleLabel[currentProfile().profile.schedule] }}
+            </span>
+          </div>
+
+          <!-- Habits -->
+          <div class="grid grid-cols-2 gap-2 mb-3 text-xs text-gray-500">
+            <div class="flex items-center gap-1.5">
+              <span>🧹</span>
+              <span>{{ getCleanlinessLabel(currentProfile().profile.cleanliness_level) }}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span>🔊</span>
+              <span>{{ getNoiseLabel(currentProfile().profile.noise_tolerance) }}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span>{{ currentProfile().profile.has_pets ? '🐾' : '🚫' }}</span>
+              <span>{{ currentProfile().profile.has_pets ? 'Tiene mascotas' : 'Sin mascotas' }}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span>{{ currentProfile().profile.smokes ? '🚬' : '🚭' }}</span>
+              <span>{{ currentProfile().profile.smokes ? 'Fumador' : 'No fuma' }}</span>
+            </div>
+          </div>
+
+          <!-- Bio -->
+          @if (currentProfile().profile.bio) {
+            <p class="text-sm text-gray-500 leading-relaxed border-t border-gray-50 pt-3">
+              {{ currentProfile().profile.bio }}
+            </p>
+          }
+
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="flex items-center justify-center gap-4 mt-6">
+
+        <!-- Dislike -->
+        <button
+          (click)="onDislike()"
+          [disabled]="isLoading()"
+          class="w-14 h-14 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:border-red-300 hover:bg-red-50 transition-all disabled:opacity-50"
+        >
+          <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+
+        <!-- Skip -->
+        <button
+          (click)="onSkip()"
+          [disabled]="isLoading()"
+          class="w-11 h-11 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50"
+        >
+          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+          </svg>
+        </button>
+
+        <!-- Like -->
+        <button
+          (click)="onLike()"
+          [disabled]="isLoading()"
+          class="w-14 h-14 bg-violet-600 rounded-full flex items-center justify-center shadow-sm hover:bg-violet-700 transition-all disabled:opacity-50"
+        >
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </button>
+
+      </div>
+
+      <!-- Progress -->
+      <p class="text-center text-xs text-gray-300 mt-4">
+        {{ currentIdx() + 1 }} de {{ profiles().length }} perfiles
+      </p>
+
+    </div>
+
+  } @else {
+    <!-- Empty state -->
+    <div class="text-center">
+      <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-700 mb-1">No hay más perfiles</h3>
+      <p class="text-sm text-gray-400">Vuelve más tarde para ver nuevas recomendaciones</p>
+    </div>
+  }
+
+</div>

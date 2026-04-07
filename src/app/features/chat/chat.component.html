@@ -1,0 +1,114 @@
+<div class="h-full flex flex-col overflow-hidden">
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex-1 flex items-center justify-center">
+      <div class="w-10 h-10 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin"></div>
+    </div>
+
+  } @else if (match() && otherProfile()) {
+
+    <!-- Header -->
+    <div class="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 shrink-0">
+      <a routerLink="/matches"
+         class="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+
+      <!-- Avatar -->
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0"
+           [class]="getAvatarColor(otherProfile()!.$id)">
+        {{ getInitials(otherProfile()!.display_name) }}
+      </div>
+
+      <!-- Name + compatibility -->
+      <div class="flex-1 min-w-0">
+        <p class="font-semibold text-gray-900 text-sm truncate">
+          {{ otherProfile()!.display_name ?? 'Sin nombre' }}
+        </p>
+        <p class="text-xs text-gray-400">
+          {{ getCompatibility(match()!.compatibility_score) }}% compatible
+        </p>
+      </div>
+    </div>
+
+    <!-- Messages area -->
+    <div class="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-1">
+
+      @for (msg of messages(); track msg.$id; let i = $index) {
+
+        <!-- Date separator -->
+        @if (i === 0 || !isSameDay(messages()[i - 1].$createdAt, msg.$createdAt)) {
+          <div class="flex items-center gap-3 my-3">
+            <div class="flex-1 h-px bg-gray-100"></div>
+            <span class="text-xs text-gray-300 shrink-0">{{ formatDateLabel(msg.$createdAt) }}</span>
+            <div class="flex-1 h-px bg-gray-100"></div>
+          </div>
+        }
+
+        <!-- Message bubble -->
+        <div class="flex" [class.justify-end]="isMe(msg.sender_id)">
+          <div class="max-w-[72%]">
+            <div class="px-3.5 py-2 rounded-2xl text-sm leading-relaxed"
+                 [class]="isMe(msg.sender_id)
+                   ? 'bg-violet-600 text-white rounded-br-sm'
+                   : 'bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-xs'">
+              {{ msg.content }}
+            </div>
+            <p class="text-xs text-gray-300 mt-1 px-1"
+               [class.text-right]="isMe(msg.sender_id)">
+              {{ formatTime(msg.$createdAt) }}
+            </p>
+          </div>
+        </div>
+
+      }
+
+      @if (messages().length === 0) {
+        <div class="flex-1 flex items-center justify-center py-12">
+          <p class="text-sm text-gray-400">Sé el primero en saludar 👋</p>
+        </div>
+      }
+
+      <div #messagesEnd></div>
+    </div>
+
+    <!-- Input area -->
+    <div class="bg-white border-t border-gray-100 px-4 py-3 shrink-0">
+      <div class="flex items-end gap-2">
+        <textarea
+          [(ngModel)]="newMessage"
+          (keydown)="onKeydown($event)"
+          [disabled]="isSending()"
+          placeholder="Escribe un mensaje..."
+          rows="1"
+          class="flex-1 resize-none rounded-2xl border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 disabled:opacity-50 max-h-28 overflow-y-auto"
+        ></textarea>
+        <button
+          (click)="send()"
+          [disabled]="!newMessage.trim() || isSending()"
+          class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center hover:bg-violet-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+        >
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+        </button>
+      </div>
+      <p class="text-xs text-gray-300 mt-1.5 pl-1">Enter para enviar · Shift+Enter para nueva línea</p>
+    </div>
+
+  } @else {
+    <!-- Error / no match -->
+    <div class="flex-1 flex items-center justify-center">
+      <div class="text-center">
+        <p class="text-gray-500 mb-3">No se pudo cargar el chat</p>
+        <a routerLink="/matches"
+           class="text-sm text-violet-600 hover:underline">Volver a Matches</a>
+      </div>
+    </div>
+  }
+
+</div>

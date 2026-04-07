@@ -1,0 +1,76 @@
+<!-- Overlay -->
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+
+    <!-- Progress bar -->
+    <div class="h-1 bg-gray-100">
+      <div
+        class="h-1 bg-violet-600 transition-all duration-300"
+        [style.width.%]="((currentStep() + 1) / steps.length) * 100">
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="p-8">
+
+      <!-- Icon -->
+      <div class="text-5xl text-center mb-4">{{ steps[currentStep()].icon }}</div>
+
+      <!-- Title -->
+      <h2 class="text-xl font-bold text-gray-900 text-center mb-2">
+        {{ steps[currentStep()].title }}
+      </h2>
+
+      <!-- Desc -->
+      <p class="text-violet-600 font-medium text-center text-sm mb-3">
+        {{ steps[currentStep()].desc }}
+      </p>
+
+      <!-- Detail -->
+      <p class="text-gray-500 text-sm text-center leading-relaxed">
+        {{ steps[currentStep()].detail }}
+      </p>
+
+      <!-- Step dots -->
+      <div class="flex justify-center gap-2 mt-6">
+        @for (step of steps; track $index) {
+          <div
+            class="w-2 h-2 rounded-full transition-all duration-200"
+            [class.bg-violet-600]="$index === currentStep()"
+            [class.w-4]="$index === currentStep()"
+            [class.bg-gray-200]="$index !== currentStep()">
+          </div>
+        }
+      </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="px-8 pb-8 flex items-center justify-between gap-3">
+
+      @if (currentStep() > 0) {
+        <button
+          (click)="prev()"
+          class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+          Anterior
+        </button>
+      } @else {
+        <button
+          (click)="skip()"
+          class="px-4 py-2 text-sm text-gray-400 hover:text-gray-600 transition-colors">
+          Omitir
+        </button>
+      }
+
+      <button
+        (click)="next()"
+        class="flex-1 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-xl transition-colors">
+        {{ isLast ? '¡Empezar!' : 'Siguiente' }}
+      </button>
+
+    </div>
+
+  </div>
+
+</div>

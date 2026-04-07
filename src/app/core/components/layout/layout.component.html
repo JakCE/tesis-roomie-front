@@ -1,0 +1,163 @@
+<div class="flex h-screen bg-gray-50">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white border-r border-gray-100 flex flex-col">
+
+    <!-- Logo -->
+    <div class="px-6 py-5 border-b border-gray-100">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-violet-600 rounded-xl flex items-center justify-center">
+          <span class="text-white text-sm font-bold">R</span>
+        </div>
+        <span class="font-bold text-gray-900 text-lg">RoomieMatch</span>
+      </div>
+    </div>
+
+    <!-- User info + bell -->
+    <div class="px-4 py-4 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
+          <span class="text-violet-600 font-semibold text-sm">
+            {{ auth.currentUser()?.name?.charAt(0)?.toUpperCase() }}
+          </span>
+        </div>
+        <div class="overflow-hidden flex-1">
+          <p class="text-sm font-medium text-gray-900 truncate">{{ auth.currentUser()?.name }}</p>
+          <p class="text-xs text-gray-400 truncate">{{ auth.currentUser()?.email }}</p>
+        </div>
+
+        <!-- Bell button -->
+        <div class="relative">
+          <button
+            (click)="toggleNotifications()"
+            class="relative p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            @if (notifications.unreadCount() > 0) {
+              <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {{ notifications.unreadCount() > 9 ? '9+' : notifications.unreadCount() }}
+              </span>
+            }
+          </button>
+
+          <!-- Dropdown -->
+          @if (showNotifications()) {
+            <div class="absolute right-0 top-9 w-72 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+
+              <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <span class="text-sm font-semibold text-gray-900">Notificaciones</span>
+                @if (notifications.unreadCount() > 0) {
+                  <button (click)="notifications.markAllRead()" class="text-xs text-violet-600 hover:underline">
+                    Marcar todas como leídas
+                  </button>
+                }
+              </div>
+
+              <div class="max-h-80 overflow-y-auto">
+                @if (notifications.items().length === 0) {
+                  <p class="text-sm text-gray-400 text-center py-6">Sin notificaciones</p>
+                }
+                @for (notif of notifications.items(); track notif.id) {
+                  <a
+                    [routerLink]="notif.type === 'match' ? '/matches' : '/chat/' + notif.matchId"
+                    (click)="onNotifClick(notif)"
+                    class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 cursor-pointer"
+                    [class.bg-violet-50]="!notif.read">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                         [class.bg-violet-100]="notif.type === 'match'"
+                         [class.bg-blue-100]="notif.type === 'message'">
+                      @if (notif.type === 'match') {
+                        <svg class="w-4 h-4 text-violet-600" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                      } @else {
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                      }
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-xs font-semibold text-gray-800">
+                        {{ notif.type === 'match' ? '¡Nuevo match!' : 'Mensaje nuevo' }}
+                      </p>
+                      <p class="text-xs text-gray-500 truncate">{{ notif.preview }}</p>
+                      <p class="text-[10px] text-gray-400 mt-0.5">{{ formatTime(notif.timestamp) }}</p>
+                    </div>
+                    @if (!notif.read) {
+                      <div class="w-2 h-2 bg-violet-500 rounded-full mt-1 shrink-0"></div>
+                    }
+                  </a>
+                }
+              </div>
+
+            </div>
+          }
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Nav links -->
+    <nav class="flex-1 px-3 py-4 flex flex-col gap-1">
+
+      <a routerLink="/dashboard"
+         routerLinkActive="bg-violet-50 text-violet-600"
+         [routerLinkActiveOptions]="{ exact: true }"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        Explorar
+      </a>
+
+      <a routerLink="/matches"
+         routerLinkActive="bg-violet-50 text-violet-600"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+        Mis Matches
+      </a>
+
+      <a routerLink="/profile"
+         routerLinkActive="bg-violet-50 text-violet-600"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        Mi Perfil
+      </a>
+
+    </nav>
+
+    <!-- Logout -->
+    <div class="px-3 py-4 border-t border-gray-100">
+      <button
+        (click)="onLogout()"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        Cerrar sesión
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 overflow-y-auto" (click)="closeNotifications()">
+    <router-outlet />
+  </main>
+
+</div>
+
+@if (showOnboarding()) {
+  <app-onboarding (done)="onboardingDone()" />
+}
