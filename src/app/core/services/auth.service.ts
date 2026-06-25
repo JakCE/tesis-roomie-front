@@ -1,9 +1,12 @@
 import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { ID, Models } from 'appwrite';
+import { firstValueFrom } from 'rxjs';
 import { AppwriteService } from './appwrite.service';
 import { ProfileService } from './profile.service';
 import { UserProfile } from '../models/user-profile.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +18,8 @@ export class AuthService {
   constructor(
     private appwrite: AppwriteService,
     private profile: ProfileService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient,
   ) {
     this.checkSession();
   }
@@ -62,6 +66,17 @@ export class AuthService {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  // Reset directo de password sin verificar el correo (las cuentas de
+  // prueba usan emails falsos que nunca recibirian el link real).
+  async recoverPassword(email: string, newPassword: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post(`${environment.apiUrl}/auth/recover-password`, {
+        email,
+        new_password: newPassword,
+      })
+    );
   }
 
   async logout(): Promise<void> {
