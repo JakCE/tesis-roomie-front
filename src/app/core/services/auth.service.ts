@@ -75,6 +75,8 @@ export class AuthService {
       this.http.post(`${environment.apiUrl}/auth/recover-password`, {
         email,
         new_password: newPassword,
+      }, {
+        headers: { 'X-Recovery-Key': environment.recoveryKey },
       })
     );
   }
